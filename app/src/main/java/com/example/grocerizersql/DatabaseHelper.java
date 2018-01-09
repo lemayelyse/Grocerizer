@@ -39,6 +39,11 @@ class DatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
+    public void clearTable() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_NAME, null, null);
+    }
+
     // Keywords get added first like a "shopping list"
     public long addKeyword(String keyword) {
         SQLiteDatabase db = this.getWritableDatabase();
