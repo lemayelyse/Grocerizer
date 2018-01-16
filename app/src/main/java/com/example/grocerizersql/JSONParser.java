@@ -55,6 +55,8 @@ class JSONGetter {
                 isr = new InputStreamReader(conn.getInputStream());
             } catch(FileNotFoundException exception){ // This means the URL is outdated
                 Log.e(exception.getMessage(), exception.toString());
+                System.out.println("The URL is probably outdated. \n" +
+                        "Unfortunately you must find the new one manually for now!");
                 return null;
             }
         } catch (IOException exc) {
