@@ -1,43 +1,42 @@
 package com.example.grocerizersql;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
-import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity {
     DatabaseHelper groceryDb;
     private String m_Text = "";
 
+    // This URL must be manually updated every week.
+    // TODO: Figure out how to get the URL automatically
+    String url = "https://wklyads.fredmeyer.com/flyer_data/1503840?locale=en-US";
+
+    getJsonTask gtask;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
 
         groceryDb = new DatabaseHelper(this);
 
-        // Parse weekly ad
-        //parseAd();
 
-        /*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });*/
     }
 
     @Override
@@ -62,23 +61,61 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    /** Called when the user taps the Add button */
+    // Called when the user taps the Enter button
     public void inputKeyword(View view) {
-        EditText editText = (EditText) findViewById(R.id.editText);
+        EditText editText = findViewById(R.id.editText);
         String input = editText.getText().toString();
 
-        groceryDb.addKeyword(input);
-        // Do..... stuff
-        // Display list?
+        Long result = groceryDb.addKeyword(input);
+        if (result == 0) {
+            Log.i("", "Failed to add keyword");
+        }
     }
 
+    // Called when the user taps the Clear button
+    public void clear(View view) {
+        groceryDb.clearTable();
+    }
+
+    // Called when the user taps the Print button
+    // Currently prints to console rather than the app screen
+    public void print(View view) { groceryDb.printTable(); }
+
+    public void fetch(View view) { // Parse weekly ad
+        gtask = new getJsonTask();
+        gtask.execute(url, groceryDb);
+    }
+
+    /*
     // Parse weekly ad JSON
     public void parseAd() {
-        // TODO: find/generate this URL from search
         String url = "https://wklyads.fredmeyer.com/flyer_data/1484730?locale=en-US";
 
-        JSONParser jp = new JSONParser();
-        jp.doTheThing(url); // For now this just prints the items
-        // Later it will make SQL
+        JSONGetter jp = new JSONGetter();
+        JsonArray items = jp.getItems(url); // Retrieves and prints items
+        groceryDb.populateTable(items);
+    }*/
+}
+
+class getJsonTask extends AsyncTask<Object, Void, JsonArray> {
+
+    private Exception exc;
+    private JSONGetter jp;
+
+    // Won't let me set the return to void
+    protected JsonArray doInBackground(Object... params) {
+        try {
+            String url = (String)params[0];
+            System.out.println(url);
+            jp = new JSONGetter();
+            JsonArray items = jp.getItems(url);
+            System.out.println("Got JSON!");
+            ((DatabaseHelper)params[1]).populateTable(items);
+            System.out.println("Table populated!");
+        } catch (Exception e) {
+            this.exc = e;
+            Log.e("Exception", e.toString());
+        }
+        return null;
     }
 }
