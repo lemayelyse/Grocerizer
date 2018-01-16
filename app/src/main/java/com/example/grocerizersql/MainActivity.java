@@ -66,10 +66,7 @@ public class MainActivity extends AppCompatActivity {
         EditText editText = findViewById(R.id.editText);
         String input = editText.getText().toString();
 
-        Long result = groceryDb.addKeyword(input);
-        if (result == 0) {
-            Log.i("", "Failed to add keyword");
-        }
+        groceryDb.addKeyword(input);
     }
 
     // Called when the user taps the Clear button

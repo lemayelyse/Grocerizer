@@ -2,7 +2,9 @@ package com.example.grocerizersql;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
@@ -55,11 +57,11 @@ class DatabaseHelper extends SQLiteOpenHelper {
 
     void printTable() {
         SQLiteDatabase db = this.getWritableDatabase();
-        System.out.print(getTableAsString(db, TABLE_NAME));
+        System.out.println(getTableAsString(db, TABLE_NAME));
     }
 
     // Keywords get added first like a "shopping list"
-    long addKeyword(String keyword) {
+    void addKeyword(String keyword) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues cv = new ContentValues();
@@ -68,8 +70,14 @@ class DatabaseHelper extends SQLiteOpenHelper {
         // Could actually run a search to check if it exists, or a partial match...
         // But that's overkill for an app as simple as this
 
-
-        return db.insert(TABLE_NAME, null, cv);
+        try {
+            db.insertOrThrow(TABLE_NAME, null, cv);
+            System.out.println("Added keyword " + keyword);
+        } catch (SQLiteConstraintException exc1) {
+            Log.e("SQLiteException", "Keyword already exists!");
+        } catch (SQLiteException exc) {
+            Log.e("SQLiteException", "Failed to add keyword. Try hitting the Clear button" );
+        }
     }
 
     // Gets list of keywords in table
@@ -92,8 +100,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
                 for (String kw : kwList) {
                     if (name.toLowerCase().contains(kw.toLowerCase())){
                         System.out.println("Match! Keyword: " + kw + ", Name: " + name);
-                        Long result = addGroceryItem(kw, itm.getAsJsonObject());
-                        if (result == 0) {Log.e("SQL", "Failed to insert");}
+                        addGroceryItem(kw, itm.getAsJsonObject());
                     }
                 }
             } catch (JsonParseException exc) {
@@ -106,7 +113,7 @@ class DatabaseHelper extends SQLiteOpenHelper {
 
     // Add name and price of individual JSON item into table
     // in row of relevant keyword
-    private long addGroceryItem(String keyword, JsonObject itm) {
+    private void addGroceryItem(String keyword, JsonObject itm) {
         SQLiteDatabase db = this.getWritableDatabase();
         Float price = 0.0f;
         String name = "";
@@ -126,9 +133,13 @@ class DatabaseHelper extends SQLiteOpenHelper {
         cv.put(COL_NAME, name);
         cv.put(COL_PRICE, price);
 
-        // TODO: Account for multiple keyword matches
+        // TODO: Account for multiple product matches on the same keyword
         // eg "Tri-tip steaks" in a separate row from "Boneless Steaks" for "Steaks" kw
-        return db.update(TABLE_NAME, cv, whereClause, new String[] {keyword});
+        try {
+            db.update(TABLE_NAME, cv, whereClause, new String[]{keyword});
+        } catch (SQLiteException exc) {
+            Log.e("SQLiteException", "Failed to update table in AddGroceryItem");
+        }
     }
 
 
