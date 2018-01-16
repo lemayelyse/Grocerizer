@@ -6,8 +6,10 @@ PLEASE NOTE: For now, currently the URL is manually hardcoded because I haven't 
 
 Instructions:
 
-Enter as many keywords as you like (one at a time) in the text field, pressing Enter for each one
-This will populate your grocery list. You can print the list with Print. It will print to the Android "Run" console.
+Enter as many keywords as you like (one at a time) in the text field, pressing Enter for each one.
+If you get an exception here, hit the Clear button and then try adding your keywords again. 
+
+This will populate your grocery list. You can print the list with Print. It will print to the Android "info" log.
 Future versions will actually show something on the app screen.
 Try keywords like "steak" and "chips".
 
